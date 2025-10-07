@@ -1,0 +1,23 @@
+# This is the Builder module
+
+module("Builder") {
+    type Executable        # This is an executable
+
+    version 1.0.0          # Builder version
+
+    public_inc {
+        "include/"
+    }
+
+    sources {
+        "src/*.c"
+    }
+
+    dependencies {
+    }
+
+    defines {
+    }
+
+    export false
+}

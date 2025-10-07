@@ -1,8 +1,7 @@
-CFLAGS = -Wall -Wextra -O2
-LDFLAGS = -Iinc
+CFLAGS = -Iinclude -Wall -Wextra -pedantic
+LDFLAGS = -lm
 
-rbuidler: src/main.c src/module.c
-	$(CC) $(CFLAGS) $(LDFLAGS) -c src/main.c -o main.o
-	$(CC) $(CFLAGS) $(LDFLAGS) -c src/module.c -o module.o
-	$(CC) $(CFLAGS) $(LDFLAGS) -o rbuidler main.o module.o
-	rm *.o
+all: builder
+
+builder: src/main.c src/module.c src/base.c src/graph.c src/order.c src/command.c src/build.c
+	$(CC) $(CFLAGS) -o ../Builder src/main.c src/module.c src/base.c src/graph.c src/order.c src/command.c src/build.c $(LDFLAGS)
