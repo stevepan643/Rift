@@ -10,7 +10,13 @@ module("Builder") {
     }
 
     sources {
-        "src/*.c"
+        "src/base.c"
+        "src/build.c"
+        "src/command.c"
+        "src/graph.c"
+        "src/main.c"
+        "src/module.c"
+        "src/order.c"
     }
 
     dependencies {

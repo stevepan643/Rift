@@ -26,7 +26,7 @@ typedef struct graph_t {
     size_t      node_count;
 } graph_t;
 
-graph_t* graph_gen_graph( module_t* root );
+graph_t* graph_gen_graph_multiple(module_t** modules, size_t module_count);
 void free_graph( graph_t* g );
 
 #endif /* RIFT_BUILDER_GRAPH_H */

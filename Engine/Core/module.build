@@ -1,0 +1,14 @@
+module("Core") {
+    type Executable
+    version 1.0.0
+
+    sources {
+        "main.c"
+    }
+
+    dependencies {
+        "Module"
+    }
+
+    export false
+}

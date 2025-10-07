@@ -1,0 +1,14 @@
+module("Module") {
+    type SharedLib
+    type 1.0.0
+
+    sources {
+        "Test.c"
+    }
+
+    public_inc {
+        "."
+    }
+
+    export true
+}

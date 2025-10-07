@@ -1,13 +1,24 @@
 /*
  * command.c - Rift Builder command line interface
+ * 跨平台完整支持：
+ *   - 静态库 / 共享库 / 可执行文件
+ *   - 每个源文件独立编译
+ *   - 输出统一到 output/ 文件夹
+ *   - 自动创建文件夹
+ *   - 保留宏、Debug/Release 选项
  */
 
 #include "command.h"
-
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
 #include <ctype.h>
+#ifdef _WIN32
+#include <direct.h> // _mkdir
+#else
+#include <sys/stat.h>
+#include <sys/types.h>
+#endif
 
 static char* str_toupper(const char* s) {
     size_t len = strlen(s);
@@ -17,125 +28,158 @@ static char* str_toupper(const char* s) {
     return out;
 }
 
-// 判断数组中是否已经存在某字符串
 static bool str_list_contains(char** list, size_t count, const char* s) {
     for (size_t i = 0; i < count; ++i)
         if (strcmp(list[i], s) == 0) return true;
     return false;
 }
 
+// 跨平台创建多级目录
+static void mkdir_p(const char* path) {
+    char tmp[512];
+    strncpy(tmp, path, sizeof(tmp));
+    size_t len = strlen(tmp);
+    if (len == 0) return;
+    if (tmp[len-1] == '/' || tmp[len-1] == '\\') tmp[len-1] = 0;
+
+    for (char* p = tmp + 1; *p; ++p) {
+        if (*p == '/' || *p == '\\') {
+            *p = 0;
+#ifdef _WIN32
+            _mkdir(tmp);
+#else
+            mkdir(tmp, 0755);
+#endif
+            *p = '/';
+        }
+    }
+#ifdef _WIN32
+    _mkdir(tmp);
+#else
+    mkdir(tmp, 0755);
+#endif
+}
+
 commands_t* build_gen_commands(build_order_t* order, build_type_t type) {
     commands_t* cmds = calloc(1, sizeof(commands_t));
-    cmds->count = order->count;
-    cmds->list = calloc(cmds->count, sizeof(command_t));
+    cmds->count = 0; // 先从 0 开始，后面动态增加
+    cmds->list = NULL;
+
+    mkdir_p("output");
+    mkdir_p("output/obj");
 
     for (uint32_t i = 0; i < order->count; ++i) {
         module_t* m = order->modules[i];
-        size_t buf_size = 4096;
-        char* cmd = calloc(1, buf_size);
-        char lib_suffix[16] = "";
         bool is_shared = (m->type == MODULE_TYPE_SHAREDLIB);
+        bool is_static = (m->type == MODULE_TYPE_STATICLIB);
+        bool is_exe    = (m->type == MODULE_TYPE_EXECUTABLE);
 
-        if (is_shared) {
-#ifdef _WIN32
-            snprintf(lib_suffix, sizeof(lib_suffix), ".dll");
-#elif __APPLE__
-            snprintf(lib_suffix, sizeof(lib_suffix), ".dylib");
-#else
-            snprintf(lib_suffix, sizeof(lib_suffix), ".so");
-#endif
-            snprintf(cmd, buf_size, "gcc -shared -fPIC ");
-        } else if (m->type == MODULE_TYPE_STATICLIB) {
-            snprintf(lib_suffix, sizeof(lib_suffix), ".a");
-            snprintf(cmd, buf_size, "ar rcs ");
-        } else {
-            snprintf(cmd, buf_size, "gcc ");
-        }
-
-        // 输出文件
-        if (is_shared)
-            snprintf(cmd + strlen(cmd), buf_size - strlen(cmd), "-o lib%s%s ", m->name, lib_suffix);
-        else if (m->type == MODULE_TYPE_STATICLIB)
-            snprintf(cmd + strlen(cmd), buf_size - strlen(cmd), "lib%s%s ", m->name, lib_suffix);
-        else
-            snprintf(cmd + strlen(cmd), buf_size - strlen(cmd), "-o %s ", m->name);
-
-        // 源文件
-        for (uint32_t j = 0; j < m->source_files->count; ++j) {
-            char path[256];
-            snprintf(path, sizeof(path), "./%s/%s", m->name, m->source_files->items[j]);
-            snprintf(cmd + strlen(cmd), buf_size - strlen(cmd), "%s ", path);
-        }
-
-        // 收集依赖的-I路径（去重）
-        char** include_paths = malloc(256 * sizeof(char*));
-        size_t include_count = 0;
-
-        // 本模块 public_inc
+        // 收集 include 路径
+        char inc_str[1024] = "";
         for (uint32_t j = 0; j < m->public_include_paths->count; ++j) {
             char path[256];
             snprintf(path, sizeof(path), "./%s/%s", m->name, m->public_include_paths->items[j]);
-            if (!str_list_contains(include_paths, include_count, path))
-                include_paths[include_count++] = strdup(path);
+            snprintf(inc_str + strlen(inc_str), sizeof(inc_str) - strlen(inc_str), "-I%s ", path);
         }
 
-        // 依赖模块 public_inc
         for (uint32_t j = 0; j < m->dependencies->count; ++j) {
             module_t* dep = NULL;
-            // 遍历order找依赖模块
             for (uint32_t k = 0; k < order->count; ++k)
-                if (strcmp(order->modules[k]->name, m->dependencies->items[j]) == 0) {
+                if (strcmp(order->modules[k]->name, m->dependencies->items[j]) == 0)
                     dep = order->modules[k];
-                    break;
-                }
             if (!dep) continue;
-
             for (uint32_t k = 0; k < dep->public_include_paths->count; ++k) {
                 char path[256];
                 snprintf(path, sizeof(path), "./%s/%s", dep->name, dep->public_include_paths->items[k]);
-                if (!str_list_contains(include_paths, include_count, path))
-                    include_paths[include_count++] = strdup(path);
+                snprintf(inc_str + strlen(inc_str), sizeof(inc_str) - strlen(inc_str), "-I%s ", path);
             }
         }
 
-        // 添加 -I
-        for (size_t j = 0; j < include_count; ++j) {
-            snprintf(cmd + strlen(cmd), buf_size - strlen(cmd), "-I%s ", include_paths[j]);
-            free(include_paths[j]);
-        }
-        free(include_paths);
+        // 1️⃣ 每个源文件编译成对象文件
+        for (uint32_t j = 0; j < m->source_files->count; ++j) {
+            char src[512], obj[512], *cmd;
+            snprintf(src, sizeof(src), "./%s/%s", m->name, m->source_files->items[j]);
+            char file_safe[256];
+            strncpy(file_safe, m->source_files->items[j], sizeof(file_safe));
+            for (char* p = file_safe; *p; ++p)
+                if (*p=='/' || *p=='\\' || *p=='.') *p='_';
+            snprintf(obj, sizeof(obj), "output/obj/%s_%s.o", m->name, file_safe);
 
-        // 添加 defines
-        for (uint32_t j = 0; j < m->defines->count; ++j)
-            snprintf(cmd + strlen(cmd), buf_size - strlen(cmd), "-D%s ", m->defines->items[j]);
+            // 创建命令字符串
+            cmd = calloc(1, 1024);
+            snprintf(cmd, 1024, "gcc -c %s %s -o %s", src, inc_str, obj);
 
-        // 默认宏
-        snprintf(cmd + strlen(cmd), buf_size - strlen(cmd), "-D%s ", type == BUILD_TYPE_DEBUG ? "DEBUG" : "RELEASE");
+            // 添加宏和编译选项
+            for (uint32_t k=0;k<m->defines->count;k++)
+                snprintf(cmd+strlen(cmd),1024-strlen(cmd)," -D%s", m->defines->items[k]);
+            snprintf(cmd+strlen(cmd),1024-strlen(cmd)," -D%s", type==BUILD_TYPE_DEBUG?"DEBUG":"RELEASE");
 #ifdef _WIN32
-        snprintf(cmd + strlen(cmd), buf_size - strlen(cmd), "-D%s ", "WINDOWS");
-#elif  __APPLE__
-        snprintf(cmd + strlen(cmd), buf_size - strlen(cmd), "-D%s ", "MACOS");
+            snprintf(cmd+strlen(cmd),1024-strlen(cmd)," -DWINDOWS");
+#elif __APPLE__
+            snprintf(cmd+strlen(cmd),1024-strlen(cmd)," -DMACOS");
 #else
-        snprintf(cmd + strlen(cmd), buf_size - strlen(cmd), "-D%s ", "LINUX");
+            snprintf(cmd+strlen(cmd),1024-strlen(cmd)," -DLINUX");
 #endif
+            if (type==BUILD_TYPE_DEBUG)
+                snprintf(cmd+strlen(cmd),1024-strlen(cmd)," -g -O0");
+            else
+                snprintf(cmd+strlen(cmd),1024-strlen(cmd)," -O2");
+            if (m->export_flag) {
+                char* upname = str_toupper(m->name);
+                snprintf(cmd+strlen(cmd),1024-strlen(cmd)," -D%s_EXPORT", upname);
+                free(upname);
+            }
 
-        if (type == BUILD_TYPE_DEBUG) {
-            snprintf(cmd + strlen(cmd), buf_size - strlen(cmd), "-g -O0 ");
-        } else {
-            snprintf(cmd + strlen(cmd), buf_size - strlen(cmd), "-O2 ");
+            // 保存命令
+            cmds->count++;
+            cmds->list = realloc(cmds->list, cmds->count * sizeof(command_t));
+            cmds->list[cmds->count-1].module_name = strdup(m->name);
+            cmds->list[cmds->count-1].cmd = cmd;
         }
 
-        // 导出宏
-        if (m->export_flag) {
-            char* upname = str_toupper(m->name);
-            snprintf(cmd + strlen(cmd), buf_size - strlen(cmd), "-D%s_EXPORT ", upname);
-            free(upname);
+        // 2️⃣ 链接/打包命令
+        char link_cmd[2048] = "";
+        if (is_shared) {
+            char objs[1024] = "";
+            for (uint32_t j=0;j<m->source_files->count;j++){
+                char file_safe[256]; strncpy(file_safe, m->source_files->items[j], sizeof(file_safe));
+                for(char* p=file_safe;*p; ++p) if(*p=='/'||*p=='\\'||*p=='.') *p='_';
+                char obj[512]; snprintf(obj,sizeof(obj),"output/obj/%s_%s.o",m->name,file_safe);
+                snprintf(objs+strlen(objs),1024-strlen(objs),"%s ",obj);
+            }
+#ifdef _WIN32
+            snprintf(link_cmd,sizeof(link_cmd),"gcc -shared -fPIC %s -o output/%s.dll",objs,m->name);
+#else
+            snprintf(link_cmd,sizeof(link_cmd),"gcc -shared -fPIC %s -o output/lib%s.so",objs,m->name);
+#endif
+        } else if (is_static) {
+            char objs[1024] = "";
+            for (uint32_t j=0;j<m->source_files->count;j++){
+                char file_safe[256]; strncpy(file_safe, m->source_files->items[j], sizeof(file_safe));
+                for(char* p=file_safe;*p; ++p) if(*p=='/'||*p=='\\'||*p=='.') *p='_';
+                char obj[512]; snprintf(obj,sizeof(obj),"output/obj/%s_%s.o",m->name,file_safe);
+                snprintf(objs+strlen(objs),1024-strlen(objs),"%s ",obj);
+            }
+            snprintf(link_cmd,sizeof(link_cmd),"ar rcs output/lib%s.a %s", m->name, objs);
+        } else if (is_exe) {
+            char objs[1024] = "";
+            for (uint32_t j=0;j<m->source_files->count;j++){
+                char file_safe[256]; strncpy(file_safe, m->source_files->items[j], sizeof(file_safe));
+                for(char* p=file_safe;*p; ++p) if(*p=='/'||*p=='\\'||*p=='.') *p='_';
+                char obj[512]; snprintf(obj,sizeof(obj),"output/obj/%s_%s.o",m->name,file_safe);
+                snprintf(objs+strlen(objs),1024-strlen(objs),"%s ",obj);
+            }
+            snprintf(link_cmd,sizeof(link_cmd),"gcc %s -o output/%s -Loutput ", objs, m->name);
+            for(uint32_t j=0;j<m->dependencies->count;j++)
+                snprintf(link_cmd+strlen(link_cmd),2048-strlen(link_cmd),"-l%s ", m->dependencies->items[j]);
         }
 
-        cmds->list[i].module_name = strdup(m->name);
-        cmds->list[i].cmd = cmd;
-
-        printf("Generated command for %s:\n  %s\n", m->name, cmd);
+        if(strlen(link_cmd)>0){
+            cmds->count++;
+            cmds->list = realloc(cmds->list, cmds->count*sizeof(command_t));
+            cmds->list[cmds->count-1].module_name = strdup(m->name);
+            cmds->list[cmds->count-1].cmd = strdup(link_cmd);
+        }
     }
 
     return cmds;

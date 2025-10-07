@@ -44,11 +44,15 @@ module("Render") {
     type SharedLib        # Output .so on Linux
     version 1.0.0         # Define the macro RENDER_VERSION version(1, 0, 0)
 
+    sources {
+        "src/*.c"
+    }
+
     public_inc {
         "inc/"            # Other modules will add -Ipath/to/render/inc
     }
 
-    depends {
+    dependencies {
         "Math"            # Add -Ipath/to/math/inc
         "Platform"        # Add -Ipath/to/platform/inc
     }

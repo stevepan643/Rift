@@ -9,80 +9,53 @@
 #include <stdbool.h>
 #include <string.h>
 
-int main( int argc, char** argv )
+int main(int argc, char** argv)
 {
-    if ( argc < 2 ) {
-        fprintf( stderr, "Usage: %s <module_file>\n", argv[0] );
+    if (argc < 2) {
+        fprintf(stderr, "Usage: Builder <Module1> [Module2 ...] <Debug|Release>\n");
         return 1;
     }
-    
-    char path[256];
-    snprintf(path, sizeof(path), "./%s/module.build", argv[1]);
-    printf( "Loading module from file: %s\n", path );
-    module_t* module = load_module_definition( path );
-    if ( !module ) { fprintf( stderr, "Failed to load module from file: %s\n", path ); return 1; }
 
-    /* Print module information */
-    printf( "Module Name: %s\n", module->name );
-    printf( "Module Type: %s\n", 
-        module->type == MODULE_TYPE_SHAREDLIB ? "Shared Library" :
-        module->type == MODULE_TYPE_STATICLIB ? "Static Library" :
-        module->type == MODULE_TYPE_EXECUTABLE ? "Executable" : "Unknown" );
-    printf( "Module Version: %d.%d.%d\n", (module->version >> 16) & 0xFF, (module->version >> 8) & 0xFF, module->version & 0xFF );
-    for ( uint32_t i = 0; i < module->source_files->count; ++i ) {
-        printf( "Source File: %s\n", module->source_files->items[i] );
-    }
-    for ( uint32_t i = 0; i < module->public_include_paths->count; ++i ) {
-        printf( "Public Include Path: %s\n", module->public_include_paths->items[i] );
-    }
-    for ( uint32_t i = 0; i < module->dependencies->count; ++i ) {
-        printf( "Dependency: %s\n", module->dependencies->items[i] );
-    }
-    for ( uint32_t i = 0; i < module->defines->count; ++i ) {
-        printf( "Define: %s\n", module->defines->items[i] );
-    }
-    printf( "Export Flag: %s\n", module->export_flag ? "true" : "false" );
+    char* build_type_str = argv[argc - 1];
+    build_type_t build_type;
+    int last_module_index = argc - 2;
 
-    /* Generate and print the dependency graph */
-    printf( "Generating dependency graph...\n" );
+    if (strcmp(build_type_str, "Debug") == 0) {
+        build_type = BUILD_TYPE_DEBUG;
+    } else if (strcmp(build_type_str, "Release") == 0) {
+        build_type = BUILD_TYPE_RELEASE;
+    } else {
+        fprintf(stderr, "Last argument must be Debug or Release\n");
+        return 1;
+    }
 
-    graph_t* g = graph_gen_graph( module );
-    printf( "Graph has %zu nodes.\n", g->node_count );
-    for ( size_t i = 0; i < g->node_count; i++ ) {
-        node_t* n = g->nodes[i];
-        printf( "Node: %s, Dependencies: %zu\n", n->module->name, n->dep_count );
-        for ( size_t j = 0; j < n->dep_count; j++ ) {
-            printf( "  - %s\n", n->deps[j]->module->name );
+    int module_count = last_module_index;
+    if (module_count <= 0) {
+        fprintf(stderr, "Please specify at least one module to build\n");
+        return 1;
+    }
+
+    module_t** modules = malloc(sizeof(module_t*) * module_count);
+    for (int i = 0; i < module_count; i++) {
+        char path[256];
+        snprintf(path, sizeof(path), "./%s/module.build", argv[i + 1]);
+        modules[i] = load_module_definition(path);
+        if (!modules[i]) {
+            fprintf(stderr, "Failed to load module: %s\n", argv[i + 1]);
+            free(modules);
+            return 1;
         }
     }
 
-    build_order_t* order = build_order( g );
-    printf( "Build order has %u modules:\n", order->count );
-    for ( uint32_t i = 0; i < order->count; ++i ) {
-        printf( "%u: %s\n", i + 1, order->modules[i]->name );
-    }
-    
-    commands_t* cmds;
-    if ( argv[2] && strcmp( argv[2], "Debug" ) == 0 ) {
-        cmds = build_gen_commands( order, BUILD_TYPE_DEBUG );
-    } else if ( argv[2] && strcmp( argv[2], "Release" ) == 0 ) {
-        cmds = build_gen_commands( order, BUILD_TYPE_RELEASE );
-    } else {
-        fprintf( stderr, "Usage: %s <module_file> <Debug|Release>\n", argv[0] );
-        return 1;
-    }
+    graph_t* g = graph_gen_graph_multiple(modules, module_count);
+    build_order_t* order = build_order(g);
 
-    bool success = build_build( cmds );
-    if ( success ) {
-        printf( "Build completed successfully.\n" );
-    } else {
-        printf( "Build failed.\n" );
-    }
+    commands_t* cmds = build_gen_commands(order, build_type);
+    bool success = build_build(cmds);
 
-    printf( "Freeing build order...\n" );
-    build_order_free( order );
-    printf( "Freeing graph...\n" );
-    free_graph( g );
+    build_order_free(order);
+    free_graph(g);
+    free(modules);
 
-    return 0;
+    return success ? 0 : 1;
 }

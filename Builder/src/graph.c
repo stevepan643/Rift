@@ -44,9 +44,18 @@ static node_t* graph_build_node( graph_t* g, module_t* m ) {
     return n;
 }
 
-graph_t* graph_gen_graph( module_t* root ) {
-    graph_t* g = calloc( 1, sizeof( graph_t ) );
-    graph_build_node( g, root );
+graph_t* graph_gen_graph_multiple(module_t** modules, size_t module_count) 
+{
+    graph_t* g = calloc(1, sizeof(graph_t));
+    if (!g) return NULL;
+
+    for (size_t i = 0; i < module_count; i++) {
+        module_t* m = modules[i];
+        if (m) {
+            graph_build_node(g, m);  // graph_build_node 内部应处理重复节点
+        }
+    }
+
     return g;
 }
 

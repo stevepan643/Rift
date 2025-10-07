@@ -42,11 +42,11 @@ build_order_t* build_order( graph_t* graph )
             dfs_visit( node, order->modules, &index, &cycle_detected );
     }
 
-    for ( uint32_t i = 0; i < index / 2; ++i ) {
-        module_t* tmp = order->modules[i];
-        order->modules[i] = order->modules[index - i - 1];
-        order->modules[index - i - 1] = tmp;
-    }
+    // for ( uint32_t i = 0; i < index / 2; ++i ) {
+    //     module_t* tmp = order->modules[i];
+    //     order->modules[i] = order->modules[index - i - 1];
+    //     order->modules[index - i - 1] = tmp;
+    // }
 
     order->count = index;
     return order;

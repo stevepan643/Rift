@@ -105,15 +105,11 @@ module_t* load_module_definition ( const char* path ) {
 
 void free_module ( module_t* m ) {
     if ( !m ) return;
-    printf ( "Freeing module: %s\n", m->name );
+
     free ( m->name );
-    printf( "Freeing source files (%u items)\n", m->source_files->count );
     free_string_list ( m->source_files );
-    printf( "Freeing public include paths (%u items)\n", m->public_include_paths->count );
     free_string_list ( m->public_include_paths );
-    printf( "Freeing dependencies (%u items)\n", m->dependencies->count );
     free_string_list ( m->dependencies );
-    printf( "Freeing defines (%u items)\n", m->defines->count );
     free_string_list ( m->defines );
     free ( m );
 }
