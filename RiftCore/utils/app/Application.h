@@ -1,11 +1,14 @@
+#pragma once
+
 namespace Rift {
-class Application {
-public:
-  Application();
-  ~Application();
+    class Application {
+    public:
+        Application();
 
-  void Run();
-};
+        ~Application();
 
-Application* CreateApplication();
+        void Run();
+    };
+
+    Application *CreateApplication();
 } // namespace Rift
