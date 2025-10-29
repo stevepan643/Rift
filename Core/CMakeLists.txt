@@ -21,8 +21,13 @@ add_library(Core STATIC
         App/EntryPoint.h
         Platform/OpenGL/ImGuiOpenGLRenderer.cpp
         Platform/OpenGL/ImGuiOpenGLLoader.h
+        Platform/GLFW/ImGuiGLFWRenderer.cpp
+        Platform/GLFW/ImGuiGLFWRenderer.h
         Input/MouseEvents.h
         Input/KeyEvents.h
+        Renderer/GraphicsContext.h
+        Platform/OpenGL/OpenGLContext.cpp
+        Platform/OpenGL/OpenGLContext.h
 )
 
 target_link_libraries(Core PUBLIC

@@ -1,9 +1,9 @@
-/* 
+/*
  * ImGuiLayer.h
  *
  * Copyright (c) 2025 Steve Pan
  * SPDX-License-Identifier: MIT
- * 
+ *
  * This file is part of Rift.
  * Created at 10/28/2025
  */
@@ -23,10 +23,16 @@ namespace Rift {
 
         void OnDetach() override;
 
-        void OnUpdate(float delta) override;
+        void OnUpdate( float delta ) override;
+
+        void Begin();
+        void End();
+
+        void OnImGuiRender() override;
+
     private:
         float time = 0.0f;
     };
-} // Rift
+} // namespace Rift
 
-#endif //RIFT_IMGUILAYER_H
+#endif // RIFT_IMGUILAYER_H

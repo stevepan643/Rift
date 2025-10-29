@@ -1,9 +1,9 @@
-/* 
+/*
  * Application.h
  *
  * Copyright (c) 2025 Steve Pan
  * SPDX-License-Identifier: MIT
- * 
+ *
  * This file is part of Rift.
  * Created at 10/28/2025
  */
@@ -22,29 +22,29 @@ namespace Rift {
         Application();
         virtual ~Application();
 
-        void PushLayer(Layer* layer);
-        void PushOverlay(Layer* layer);
+        void PushLayer( Layer *layer );
+        void PushOverlay( Layer *layer );
 
         void Run();
 
         void Close();
 
-        Window& GetWindow() const { return *window; }
-        ImGuiLayer* GetImGuiLayer() const { return imGuiLayer; }
-        static Application& Get() { return *instance; }
-    private:
+        Window             &GetWindow() const { return *window; }
+        ImGuiLayer         *GetImGuiLayer() const { return imGuiLayer; }
+        static Application &Get() { return *instance; }
 
-        bool running = true;
+    private:
+        bool          running = true;
         Scope<Window> window;
-        LayerStack layerStack;
-        ImGuiLayer* imGuiLayer;
+        LayerStack    layerStack;
+        ImGuiLayer   *imGuiLayer;
 
         float lastFrameTime = 0.0f;
 
-        static Application* instance;
+        static Application *instance;
     };
 
-    Application* CreateApplication();
-} // Rift
+    Application *CreateApplication();
+} // namespace Rift
 
-#endif //RIFT_APPLICATION_H
+#endif // RIFT_APPLICATION_H

@@ -1,9 +1,9 @@
-/* 
+/*
  * EntryPoint.h
  *
  * Copyright (c) 2025 Steve Pan
  * SPDX-License-Identifier: MIT
- * 
+ *
  * This file is part of Rift.
  * Created at 10/28/2025
  */
@@ -13,9 +13,9 @@
 
 #include "App/Application.h"
 
-extern Rift::Application* Rift::CreateApplication();
+extern Rift::Application *Rift::CreateApplication();
 
-int main(int argc, char** argv) {
+int main( int argc, char **argv ) {
     Rift::Log::Init();
 
     auto app = Rift::CreateApplication();
@@ -25,4 +25,4 @@ int main(int argc, char** argv) {
     delete app;
 }
 
-#endif //RIFT_ENTRYPOINT_H
+#endif // RIFT_ENTRYPOINT_H
