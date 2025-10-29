@@ -24,29 +24,29 @@ namespace Rift {
 
         void OnUpdate() override;
 
-        unsigned int GetWidth() const override { return Data.Width; }
-        unsigned int GetHeight() const override { return Data.Height; }
+        unsigned int GetWidth() const override { return data.width; }
+        unsigned int GetHeight() const override { return data.height; }
 
         void SetVSync(bool enabled) override;
         bool IsVSync() const override;
 
-        virtual void* GetNativeWindow() const { return Window; }
+        virtual void* GetNativeWindow() const { return window; }
     private:
         virtual void Init(const WindowProps& props);
         virtual void Shutdown();
     private:
-        GLFWwindow* Window;
+        GLFWwindow* window;
 
         struct WindowData
         {
-            std::string Title;
-            unsigned int Width, Height;
-            bool VSync;
+            std::string title;
+            unsigned int width, height;
+            bool isVSync;
 
-            EventCallbackFn EventCallback;
+            EventCallbackFn eventCallback;
         };
 
-        WindowData Data;
+        WindowData data;
     };
 } // Rift
 

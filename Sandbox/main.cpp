@@ -11,15 +11,10 @@
 #include "Logger/Log.h"
 #include "App/EntryPoint.h"
 #include "Event/Event.h"
+#include "Input/MouseEvents.h"
 #include "Window/WindowEvents.h"
 
 class Sandbox : public Rift::Application {
-public:
-    Sandbox() {
-        Rift::SystemEvent->Subscribe<Rift::WindowCloseEvent>([](const Rift::WindowCloseEvent& e) {
-            RIFT_LOGGER_INFO("Window Closed");
-        });
-    }
 };
 
 Rift::Application* Rift::CreateApplication() { return new Sandbox(); }

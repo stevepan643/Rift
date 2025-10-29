@@ -9,6 +9,7 @@ add_subdirectory(ThirdParty/spdlog)
 add_subdirectory(ThirdParty/GLFW)
 add_subdirectory(ThirdParty/GLAD)
 add_subdirectory(ThirdParty/imgui)
+add_subdirectory(ThirdParty/GLM)
 
 add_subdirectory(Core)
 add_subdirectory(Sandbox)

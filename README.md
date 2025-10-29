@@ -54,6 +54,17 @@ cmake --build Build
 * Immediate-mode GUI for C++.
 * License: [![License](https://img.shields.io/github/license/ocornut/imgui.svg)](https://github.com/ocornut/imgui/blob/master/LICENSE.txt)
 
+### [CMake ImGui](https://github.com/giladreich/cmake-imgui)
+
+* CMake cross platform module for building Dear ImGui as static or shared library.
+* License: [![License](https://img.shields.io/github/license/giladreich/cmake-imgui.svg)](https://github.com/giladreich/cmake-imgui/blob/master/LICENSE)
+
+### [GLM](https://github.com/icaven/glm)
+
+* OpenGL Mathematics.
+* License: [![License: Happy Bunny (MIT)](https://img.shields.io/badge/License-Happy_Bunny_(MIT)-pink.svg)](https://github.com/icaven/glm/blob/master/copying.txt)
+  [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/icaven/glm/blob/master/copying.txt)
+
 ---
 
 ## 📄 License

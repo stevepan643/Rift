@@ -21,7 +21,8 @@ add_library(Core STATIC
         App/EntryPoint.h
         Platform/OpenGL/ImGuiOpenGLRenderer.cpp
         Platform/OpenGL/ImGuiOpenGLLoader.h
-        Input/InputEvents.h
+        Input/MouseEvents.h
+        Input/KeyEvents.h
 )
 
 target_link_libraries(Core PUBLIC
@@ -29,6 +30,7 @@ target_link_libraries(Core PUBLIC
         glfw
         glad
         ImGui::imgui
+        glm::glm
 )
 
 target_precompile_headers(Core PUBLIC pch.cpp pch.h)

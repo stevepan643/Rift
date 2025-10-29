@@ -15,6 +15,8 @@
 #include "Window/WindowEvents.h"
 #include "glad/glad.h"
 #include "GLFW/glfw3.h"
+#include "Input/KeyEvents.h"
+#include "Input/MouseEvents.h"
 
 namespace Rift {
     static bool GLFWInitialized = false;
@@ -29,7 +31,7 @@ namespace Rift {
 
     void WinWindow::OnUpdate() {
         glfwPollEvents();
-        glfwSwapBuffers(Window);
+        glfwSwapBuffers(window);
     }
 
     void WinWindow::SetVSync(bool enabled) {
@@ -37,17 +39,17 @@ namespace Rift {
             glfwSwapInterval(1);
         else
             glfwSwapInterval(0);
-        Data.VSync = enabled;
+        data.isVSync = enabled;
     }
 
     bool WinWindow::IsVSync() const {
-        return Data.VSync;
+        return data.isVSync;
     }
 
     void WinWindow::Init(const WindowProps &props) {
-        Data.Width = props.Width;
-        Data.Height = props.Height;
-        Data.Title = props.Title;
+        data.width = props.Width;
+        data.height = props.Height;
+        data.title = props.Title;
 
         CORE_LOGGER_TRACE("Creating window {0} ({1}, {2})", props.Title, props.Width, props.Height);
 
@@ -58,24 +60,68 @@ namespace Rift {
             GLFWInitialized = true;
         }
 
-        Window = glfwCreateWindow((int)props.Width, (int)props.Height, Data.Title.c_str(), nullptr, nullptr);
+        window = glfwCreateWindow((int)props.Width, (int)props.Height, data.title.c_str(), nullptr, nullptr);
         RF_CORE_ASSERT(Window, "Failed to create GLFW window!");
-        glfwMakeContextCurrent(Window);
+        glfwMakeContextCurrent(window);
         int result = gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
         RF_CORE_ASSERT(result, "Failed to initialize GLAD!");
-        glfwSetWindowUserPointer(Window, &Data);
+        glfwSetWindowUserPointer(window, &data);
         SetVSync(true);
 
-        glfwSetWindowSizeCallback(Window, [](GLFWwindow* window, int width, int height) {
+        glfwSetWindowSizeCallback(window, [](GLFWwindow* window, int width, int height) {
             WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
-            data.Width = width;
-            data.Height = height;
+            data.width = width;
+            data.height = height;
 
             SystemEvent->Publish(WindowResizeEvent(width, height));
         });
 
-        glfwSetWindowCloseCallback(Window, [](GLFWwindow* window) {
+        glfwSetWindowCloseCallback(window, [](GLFWwindow*) {
             SystemEvent->Publish(WindowCloseEvent());
+        });
+
+        glfwSetKeyCallback(window, [](GLFWwindow*, const int key, int, int action, int) {
+            switch (action) {
+                case GLFW_PRESS: {
+                    SystemEvent->Publish(KeyPressedEvent(key));
+                    break;
+                }
+                case GLFW_RELEASE: {
+                    SystemEvent->Publish(KeyReleasedEvent(key));
+                    break;
+                }
+                case GLFW_REPEAT: {
+                    SystemEvent->Publish(KeyPressedEvent(key, true));
+                    break;
+                }
+                default: ;
+            }
+        });
+
+        glfwSetCharCallback(window, [](GLFWwindow*, unsigned int codepoint) {
+            SystemEvent->Publish(KeyTypedEvent(codepoint));
+        });
+
+        glfwSetMouseButtonCallback(window, [](GLFWwindow*, int button, int action, int mods) {
+            switch (action) {
+                case GLFW_PRESS: {
+                    SystemEvent->Publish(MouseButtonPressedEvent(button));
+                    break;
+                }
+                case GLFW_RELEASE: {
+                    SystemEvent->Publish(MouseButtonReleasedEvent(button));
+                    break;
+                }
+                default: ;
+            }
+        });
+
+        glfwSetScrollCallback(window, [](GLFWwindow*, double offsetX, double offsetY) {
+            SystemEvent->Publish(MouseScrolledEvent(static_cast<float>(offsetX), static_cast<float>(offsetY)));
+        });
+
+        glfwSetCursorPosCallback(window, [](GLFWwindow*, double posX, double posY) {
+            SystemEvent->Publish(MouseMovedEvent(static_cast<float>(posX), static_cast<float>(posY)));
         });
     }
 

@@ -13,6 +13,7 @@
 #include "Core/Assert.h"
 #include "Event/Event.h"
 #include "Window/WindowEvents.h"
+#include "glad/glad.h"
 
 namespace Rift {
     Application* Application::instance = nullptr;
@@ -49,6 +50,7 @@ namespace Rift {
 
     void Application::Run() {
         while (running) {
+            glClear(GL_COLOR_BUFFER_BIT);
             for (Layer *layer : layerStack)
                 layer->OnUpdate(0.0f);
             window->OnUpdate();
