@@ -12,33 +12,33 @@
 
 namespace Rift {
     LayerStack::~LayerStack() {
-        for ( Layer *layer : m_Layers ) {
+        for ( Layer *layer : layers ) {
             layer->OnDetach();
             delete layer;
         }
     }
 
     void LayerStack::PushLayer( Layer *layer ) {
-        m_Layers.emplace( m_Layers.begin() + m_LayerInsertIndex, layer );
-        m_LayerInsertIndex++;
+        layers.emplace( layers.begin() + layerInsertIndex, layer );
+        layerInsertIndex++;
     }
 
-    void LayerStack::PushOverlay( Layer *overlay ) { m_Layers.emplace_back( overlay ); }
+    void LayerStack::PushOverlay( Layer *overlay ) { layers.emplace_back( overlay ); }
 
     void LayerStack::PopLayer( Layer *layer ) {
-        auto it = std::find( m_Layers.begin(), m_Layers.begin() + m_LayerInsertIndex, layer );
-        if ( it != m_Layers.begin() + m_LayerInsertIndex ) {
+        auto it = std::find( layers.begin(), layers.begin() + layerInsertIndex, layer );
+        if ( it != layers.begin() + layerInsertIndex ) {
             layer->OnDetach();
-            m_Layers.erase( it );
-            m_LayerInsertIndex--;
+            layers.erase( it );
+            layerInsertIndex--;
         }
     }
 
     void LayerStack::PopOverlay( Layer *overlay ) {
-        auto it = std::find( m_Layers.begin() + m_LayerInsertIndex, m_Layers.end(), overlay );
-        if ( it != m_Layers.end() ) {
+        auto it = std::find( layers.begin() + layerInsertIndex, layers.end(), overlay );
+        if ( it != layers.end() ) {
             overlay->OnDetach();
-            m_Layers.erase( it );
+            layers.erase( it );
         }
     }
 

@@ -13,7 +13,7 @@
 
 #include "GLFW/glfw3.h"
 #include "Renderer/GraphicsContext.h"
-#include "glad/glad.h"
+// #include "glad/glad.h"
 
 namespace Rift {
 

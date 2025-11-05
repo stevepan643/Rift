@@ -22,8 +22,12 @@ namespace Rift {
         void Bind() const override;
         void Unbind() const override;
 
+        const BufferLayout &GetLayout() const override { return layout; }
+        void                SetLayout( const BufferLayout &layout ) override { this->layout = layout; }
+
     private:
-        uint32_t rendererID;
+        uint32_t     rendererID;
+        BufferLayout layout;
     };
 
     class OpenGLIndexBuffer : public IndexBuffer {

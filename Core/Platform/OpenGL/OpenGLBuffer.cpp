@@ -10,7 +10,7 @@
 
 #include "OpenGLBuffer.h"
 
-#include "glad/glad.h"
+// #include "glad/glad.h"
 
 namespace Rift {
     OpenGLVertexBuffer::OpenGLVertexBuffer( float *data, uint32_t size ) {
