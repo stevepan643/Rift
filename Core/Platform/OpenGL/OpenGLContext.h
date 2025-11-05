@@ -10,8 +10,10 @@
 
 #ifndef RIFT_OPENGLCONTEXT_H
 #define RIFT_OPENGLCONTEXT_H
+
 #include "GLFW/glfw3.h"
 #include "Renderer/GraphicsContext.h"
+#include "glad/glad.h"
 
 namespace Rift {
 

@@ -1,33 +1,41 @@
 add_library(Core STATIC
-        Logger/Log.cpp
-        Logger/Log.h
         Core/Base.h
+        Core/Assert.h
         Event/Event.h
         Window/Window.h
         Window/Window.cpp
-        Platform/Win/WinWindow.cpp
-        Platform/Win/WinWindow.h
-        Platform/OpenGL/ImGuiOpenGLRenderer.h
         Window/WindowEvents.h
-        Core/Assert.h
         Layer/Layer.cpp
         Layer/Layer.h
         Layer/LayerStack.cpp
         Layer/LayerStack.h
+        Logger/Log.cpp
+        Logger/Log.h
         ImGUI/ImGuiLayer.cpp
         ImGUI/ImGuiLayer.h
         App/Application.cpp
         App/Application.h
         App/EntryPoint.h
+        Input/MouseEvents.h
+        Input/KeyEvents.h
+        Platform/Win/WinWindow.cpp
+        Platform/Win/WinWindow.h
+        Platform/OpenGL/ImGuiOpenGLRenderer.h
         Platform/OpenGL/ImGuiOpenGLRenderer.cpp
         Platform/OpenGL/ImGuiOpenGLLoader.h
         Platform/GLFW/ImGuiGLFWRenderer.cpp
         Platform/GLFW/ImGuiGLFWRenderer.h
-        Input/MouseEvents.h
-        Input/KeyEvents.h
-        Renderer/GraphicsContext.h
         Platform/OpenGL/OpenGLContext.cpp
         Platform/OpenGL/OpenGLContext.h
+        Platform/OpenGL/OpenGLBuffer.h
+        Platform/OpenGL/OpenGLBuffer.cpp
+        Renderer/GraphicsContext.h
+        Renderer/Shader.cpp
+        Renderer/Shader.h
+        Renderer/Buffer.h
+        Renderer/Buffer.cpp
+        Renderer/Renderer.cpp
+        Renderer/Renderer.h
 )
 
 target_link_libraries(Core PUBLIC

@@ -14,6 +14,9 @@
 #include "ImGUI/ImGuiLayer.h"
 #include "Layer/Layer.h"
 #include "Layer/LayerStack.h"
+#include "Platform/OpenGL/ImGuiOpenGLLoader.h"
+#include "Renderer/Buffer.h"
+#include "Renderer/Shader.h"
 #include "Window/Window.h"
 
 namespace Rift {
@@ -38,6 +41,11 @@ namespace Rift {
         Scope<Window> window;
         LayerStack    layerStack;
         ImGuiLayer   *imGuiLayer;
+
+        Scope<Shader>       shader;
+        GLuint              vertexArray;
+        Scope<VertexBuffer> vertexBuffer;
+        Scope<IndexBuffer>  indexBuffer;
 
         float lastFrameTime = 0.0f;
 

@@ -12,7 +12,6 @@
 #define RIFT_WINDOWEVENTS_H
 
 #include "Event/Event.h"
-#include "Window.h"
 
 namespace Rift {
     class WindowErrorEvent : public Event {

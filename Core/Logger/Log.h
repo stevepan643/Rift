@@ -11,6 +11,7 @@
 #ifndef RIFT_LOG_H
 #define RIFT_LOG_H
 
+#include "Core/Base.h"
 #include "spdlog/spdlog.h"
 
 namespace Rift {

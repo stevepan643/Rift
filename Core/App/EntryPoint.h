@@ -12,6 +12,7 @@
 #define RIFT_ENTRYPOINT_H
 
 #include "App/Application.h"
+#include "Logger/Log.h"
 
 extern Rift::Application *Rift::CreateApplication();
 

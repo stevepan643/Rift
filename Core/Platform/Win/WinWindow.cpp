@@ -17,7 +17,6 @@
 #include "Logger/Log.h"
 #include "Platform/OpenGL/OpenGLContext.h"
 #include "Window/WindowEvents.h"
-#include "glad/glad.h"
 
 namespace Rift {
     static bool GLFWInitialized = false;

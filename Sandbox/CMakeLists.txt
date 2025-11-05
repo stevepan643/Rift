@@ -1,9 +1,9 @@
 add_executable(Sandbox
-    main.cpp
+        main.cpp
 )
 
- target_link_libraries(Sandbox PRIVATE Core)
+target_link_libraries(Sandbox PRIVATE Core)
 
 target_include_directories(Sandbox PRIVATE
-    ${CMAKE_SOURCE_DIR}/Core
+        ${CMAKE_SOURCE_DIR}/Core
 )
